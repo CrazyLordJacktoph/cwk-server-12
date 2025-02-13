@@ -1,5 +1,5 @@
 [
-	{"Season":"Season01","EndDate":"12/1/2016","Name":"Cinnamon Season","BannerTexture":"PVP_Season_Cinnamon","Rank":"1","SoftCurrency":"10000","FreeHardCurrency":"10","XPMaterials":"CAKE_T3_Corn","GachaKey":"Premium"},
+	{"Season":"Season01","EndDate":"12/1/2016","Name":"Cinnamon Season","BannerTexture":"PVP_Season_Cinnamon","Rank":"1","Creatures":"BaldmansThrone_Base","SoftCurrency":"10000","FreeHardCurrency":"10","XPMaterials":"CAKE_T3_Corn","GachaKey":"Premium"},
 	{"Season":"^","Rank":"2","SoftCurrency":"10000","FreeHardCurrency":"10","XPMaterials":"CAKE_T3_Plains","GachaKey":"Premium"},
 	{"Season":"^","Rank":"3","SoftCurrency":"10000","FreeHardCurrency":"10","XPMaterials":"CAKE_T3_Sand","GachaKey":"Premium"},
 	{"Season":"^","Rank":"4","SoftCurrency":"10000","FreeHardCurrency":"10","XPMaterials":"CAKE_T3_Nice"},
