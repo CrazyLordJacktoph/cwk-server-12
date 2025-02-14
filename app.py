@@ -737,7 +737,7 @@ def Manifest():
 		return f.read()
 
 #only works in v3.0.0.1
-@app.route("/persist/static/blueprints", methods=['GET'])
+@app.route("/persist/blueprints", methods=['GET'])
 def Blueprints():
 	data = []
 	for root, dirs, files in os.walk("data/persist/blueprints"):
