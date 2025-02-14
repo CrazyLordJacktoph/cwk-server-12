@@ -736,7 +736,7 @@ def Manifest():
 	with open("data/persist/manifest.json", "r") as f:
 		return f.read()
 
-#only works in v1.18.0
+#only works in v3.0.0.1
 @app.route("/persist/static/blueprints", methods=['GET'])
 def Blueprints():
 	data = []
