@@ -736,7 +736,7 @@ def Manifest():
 	with open("data/persist/manifest.json", "r") as f:
 		return f.read()
 
-#only works in v3.0.0.1
+#only works in v1.18.0
 @app.route("/persist/staric/blueprints", methods=['GET'])
 def Blueprints():
 	data = []
@@ -1536,10 +1536,10 @@ if __name__ == '__main__':
 	#create version.txt and android_version.txt if they don't exist
 	if not os.path.exists("data/persist/version.txt"):
 		with open("data/persist/version.txt", "w") as f:
-			f.write("3.0.0.1")
+			f.write("1.0.0")
 	if not os.path.exists("data/persist/android_version.txt"):
 		with open("data/persist/android_version.txt", "w") as f:
-			f.write("3.0.0.1")
+			f.write("1.0.0")
 
 	app.run(debug=args.debug, port=args.port)
 
