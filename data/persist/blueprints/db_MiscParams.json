@@ -45,7 +45,7 @@
 	{"Parameter":"PvPReconnectRetryCountHost","Value":"3"},
 	{"Parameter":"PvPReconnectRetryCountClient","Value":"7"},
 	{"Parameter":"PvPMessageAckTimeout","Value":"4"},
-	{"Parameter":"PvPHeartBeat","Value":"5"},
+	{"Parameter":"PvPHeartBeat","Value":"1"},
 	{"Parameter":"PvPResendDelay","Value":"1"},
 	{"Parameter":"PvPLeaveDelay","Value":"0.5"},
 	{"Parameter":"ForceDisableDebug","Value":"False"},
