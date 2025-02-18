@@ -1,5 +1,5 @@
 [
-	{"Season":"April2015","EndDate":"5/1/2015","Name":"!!SEASON_DRAGON","BannerTexture":"Dragon","Rank":"1","HardCurrency":"3","RuneID":"Evo_Mat_T4_Red","RuneCount":"3"},
+	{"Season":"January2025","EndDate":"2/14/2025","Name":"!!SEASON_DRAGON","BannerTexture":"Dragon","Rank":"1","HardCurrency":"3","RuneID":"Evo_Mat_T4_Red","RuneCount":"3"},
 	{"Season":"^","Rank":"2","CardID":"GRD_0022","RuneID":"Evo_Mat_T3_Special","RuneCount":"3"},
 	{"Season":"^","Rank":"3","SoftCurrency":"25000","CreatureID":"BabyDragon_Base_Blue","CreatureLevel":"1"},
 	{"Season":"^","Rank":"4","SocialCurrency":"1000","RuneID":"Evo_Mat_T2_Red","RuneCount":"3"},
@@ -9,7 +9,7 @@
 	{"Season":"^","Rank":"8","SocialCurrency":"300","CreatureID":"Pegasus_Base_Blue","CreatureLevel":"1"},
 	{"Season":"^","Rank":"9","SoftCurrency":"1000","RuneID":"Evo_Mat_T1_Green","RuneCount":"3"},
 	{"Season":"^","Rank":"10","SocialCurrency":"100"},
-	{"Season":"May2015","EndDate":"6/1/2015","Name":"!!SEASON_DRAGON","BannerTexture":"Dragon","Rank":"1","SoftCurrency":"1000"},
+	{"Season":"February2025","EndDate":"3/1/2025","Name":"!!SEASON_DRAGON","BannerTexture":"Dragon","Rank":"1","SoftCurrency":"1000"},
 	{"Season":"^","Rank":"2","SoftCurrency":"900"},
 	{"Season":"^","Rank":"3","SoftCurrency":"800"},
 	{"Season":"^","Rank":"4","SoftCurrency":"700"},

@@ -1,30 +1,35 @@
-import hmac
-import hashlib
+# Standard library imports
+import argparse
 import base64
 import gzip
+import hmac
 import hashlib
-from io import BytesIO
 import json
+import logging
+import os
 import random
 import re
-import shutil
 import secrets
+import shutil
 import string
 import subprocess
-import schedule
 import threading
 import time
-from flask import Flask, Request, render_template, make_response, jsonify, request, redirect, abort, send_from_directory
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_bcrypt import Bcrypt
-import os
-import argparse
-from urllib.parse import parse_qs
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
+from urllib.parse import parse_qs
+
+# Third-party library imports
+import schedule
+from flask import (Flask, Request, abort, jsonify, make_response, redirect, 
+                   render_template, request, send_from_directory)
+from flask_bcrypt import Bcrypt
+from flask_login import (LoginManager, UserMixin, current_user, 
+                         login_required, login_user, logout_user)
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
-import discord_webhook
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--port', type=int, default=5000)
@@ -72,7 +77,7 @@ def PersistVersion():
 		"clickable": "yes",
 		"android_version": android_version,
 		"version": pc_version,
-		"android_url": "https://github.com/GrandDad3837/CardWarsKingdom12/releases",
+		"android_url": "https://github.com/GranDad3837/CardWarsKingdom12/releases",
 		"pc_url": "https://github.com/GrandDad3837/CardWarsKingdom12/releases",
 	}
 	return json.dumps(data)
@@ -295,34 +300,34 @@ def AdminPlayers():
 		return abort(404)
 
 	players = Player.query.all()
-
+	
 	#convert player to dict
 	players = [player.as_dict() for player in players]
-
+ 
 	#remove any players that do not have a multiplayer name
 	players = [player for player in players if player["game"] != None and player["leader_level"] != None]
-
+ 
 	#remove any player that is banned
 	players = [player for player in players if not IsUserBanned(player["username"])]
-
+	
 	for player in players:
-		player["last_online"] = datetime.fromtimestamp(player["last_online"], tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S GMT')
-
+		player["last_online"] = datetime.fromtimestamp(player["last_online"], tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+  
 		#if player's multiplayer name is empty, attempt to get it from their game
 		if player["multiplayer_name"] == None:
 			player["multiplayer_name"] = GetNameFromSave(player["game"])
 
 	sortQuery = request.args.get('sort')
-
+ 
 	if sortQuery is not None:
 		players = sorted(players, key=lambda player: player[sortQuery], reverse=True)
 	else:
 		players = players[::-1]
-
+	
 	return render_template('admin_players.html', players=players, player_count=len(players))
 
 def GetNameFromSave(save):
-
+    
 	try:
 		game = DecryptGameData(save)
 	except Exception:
@@ -330,6 +335,36 @@ def GetNameFromSave(save):
 	if game is None:
 		return None
 	return game["MultiplayerPlayerName"]
+
+@app.route("/online_players")
+def AdminOnlinePlayers():
+
+
+    players = Player.query.all()
+    players = [player.as_dict() for player in players]
+
+    # Get the current time minus five minutes (in UTC)
+    current_time = datetime.now(timezone.utc)
+    five_minutes_ago = current_time - timedelta(minutes=5)
+
+    online_players = []
+
+    # Log and check player last_online times
+    for player in players:
+        # Convert any bytes fields to string (e.g., multiplayer_name, game, etc.)
+        for key, value in player.items():
+            if isinstance(value, bytes):
+                player[key] = value.decode('utf-8')  # Decode bytes to string
+
+        if player["last_online"]:
+            last_online = datetime.fromtimestamp(player["last_online"], tz=timezone.utc)
+            if last_online >= five_minutes_ago:
+                online_players.append(player)
+
+    return {
+        "online_player_count": len(online_players)
+    }
+
 
 @login_required
 @app.route("/admin/players/<player>")
@@ -379,48 +414,66 @@ def AdminPlayer(player):
 @login_required
 @app.route("/admin/players/<player>/game")
 def AdminPlayerGame(player):
-	if not isAdmin(current_user):
-		return abort(404)
+    if not isAdmin(current_user):
+        return abort(404)
 
-	player = Player.query.filter_by(username=player).first()
+    player = Player.query.filter_by(username=player).first()
 
-	if player is None:
-		return make_response("No player found!", 404)
+    if player is None:
+        return make_response("No player found!", 404)
 
-	player = player.as_dict()
+    player = player.as_dict()
 
-	try:
-		game = DecryptGameData(player["game"])
-	except Exception: #save is most likely not encrypted
-		game = player["game"]
+    try:
+        game = DecryptGameData(player["game"])
+    except Exception:  # save is most likely not encrypted
+        game = player["game"]
+
+    if game is None:
+        return make_response("No game found!", 404)
+
+    # تحويل الكائن إلى نص JSON بدون الهروب من علامات الاقتباس
+    game_json = json.dumps(game, ensure_ascii=False)
+
+    # إزالة علامات الاقتباس الزائدة في البداية والنهاية
+    if game_json.startswith('"') and game_json.endswith('"'):
+        game_json = game_json[1:-1]
 
 
-	if game is None:
-		return make_response("No game found!", 404)
 
-	return render_template('admin_player_game.html', game=game, player_id=player["username"])
+    game_json = game_json.replace('\\"', '"')
 
+    return render_template('admin_player_game.html', game=game_json, player_id=player["username"])
 @login_required
 @app.route("/admin/players/<player>/game/edit", methods=['POST'])
 def AdminPlayerGameEdit(player):
-	if not isAdmin(current_user):
-		return abort(404)
+    if not isAdmin(current_user):
+        return abort(404)
 
-	player = Player.query.filter_by(username=player).first()
+    player = Player.query.filter_by(username=player).first()
 
-	if player is None:
-		return make_response("No player found!", 404)
+    if player is None:
+        return make_response("No player found!", 404)
 
-	#get game from post
-	game = request.form['player_game']
-	print(game)
-	#update game
-	player.game = game
-	db.session.commit()
+    # Get game data from POST request
+    game = request.form.get('player_game')
+    if game is None:
+        return make_response("No game data provided!", 400)
 
-	Log("admin", current_user.username + " edited game data for player: " + player.username)
+    print("Received game data:", game)
 
-	return redirect("/admin/players/" + player.username)
+    try:
+        # Update game data
+        player.game = game
+        db.session.commit()
+        print("Game data updated successfully.")
+    except Exception as e:
+        db.session.rollback()  # Rollback if something goes wrong
+        print("Error updating game data:", str(e))
+        return make_response("Failed to update game data.", 500)
+
+    Log("admin", current_user.username + " edited game data for player: " + player.username)
+    return redirect("/admin/players/" + player.username)
 
 def DecryptGameData(game:str):
 	if game is None or game == b"" or game == b" ":
@@ -469,13 +522,58 @@ def AdminPlayerAction(player, action):
 	DiscordWebhookMessage(current_user.username + " performed " + action + " on ID: " + player)
 	return redirect("/admin/players/" + player)
 
-def SystemBan(username):
-	Log("admin", "SYSTEM BANNED " + username)
-	if not IsUserBanned(username):
-		newban = Bans(username=username, bantype="userid", author="SYSTEM", time=int(time.time()))
-		db.session.add(newban)
-		db.session.commit()
-		DiscordWebhookMessage("SYSTEM performed ban on ID: " + username)
+@app.route("/admin/players/transfer", methods=['POST'])
+def AdminPlayerTransfer():
+    # Fetch API key from the request headers
+    api_key = request.headers.get("API-Key")
+
+    # Validate the API key
+    if api_key != "9df81b2c-4f3a-41c7-8a3e-e28c0f6d9c49":
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Get the player IDs and leader_level from the request
+    data = request.json
+    id1 = data.get("id1")
+    id2 = data.get("id2")
+    leader_level = data.get("leader_level")
+
+    if not id1 or not id2 or not leader_level:
+        return jsonify({"error": "Both player IDs and leader level are required"}), 400
+
+    # Check if the IDs are the same
+    if id1 == id2:
+        return jsonify({"error": "Player IDs cannot be the same for both players"}), 400
+
+    # Fetch players
+    player1 = Player.query.filter_by(username=id1).first()
+    player2 = Player.query.filter_by(username=id2).first()
+
+    if not player1 or not player2:
+        return jsonify({"error": "One or both players not found"}), 404
+
+    try:
+        # Convert the leader_level to an integer (if it isn't already)
+        leader_level = int(leader_level.strip())  # Strip any extra spaces and convert to integer
+
+        # Check if the leader level matches
+        if player1.leader_level != leader_level:
+            return jsonify({"error": f"Rank does not match for player {id1}. Make sure you enter the correct one."}), 400
+
+        # Directly transfer the game data (without decryption)
+        if player1.game:
+            player2.game = player1.game  # Transfer the .bin file as is, no decryption needed
+        else:
+            logging.error(f"No game data found for {id1}")
+            return jsonify({"error": "No game data to transfer from player 1"}), 400
+
+        db.session.commit()
+
+        logging.info(f"Transferred progress from {id1} to {id2}")
+        return jsonify({"success": f"Progress transferred from {id1} to {id2}"}), 200
+
+    except Exception as e:
+        logging.error(f"Error during transfer: {str(e)}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 @login_required
 @app.route("/admin/ipban/<ip>/unban")
@@ -736,8 +834,15 @@ def Manifest():
 	with open("data/persist/manifest.json", "r") as f:
 		return f.read()
 
+@app.route("/persist/static/Blueprints/<path:filename>", methods=['GET'])
+def get_blueprints(filename):
+    file_path = os.path.join("data/persist/blueprints", filename)
+
+    with open(file_path, "r") as file:
+        return file.read()
+
 #only works in v1.18.0
-@app.route("/persist/staric/blueprints", methods=['GET'])
+@app.route("/persist/static/blueprints", methods=['GET'])
 def Blueprints():
 	data = []
 	for root, dirs, files in os.walk("data/persist/blueprints"):
